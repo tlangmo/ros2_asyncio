@@ -1,0 +1,49 @@
+exclude: ^.github/|.devcontainer|.vscode|build|install|log
+fail_fast: false
+
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=600']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-xml
+      - id: check-yaml
+      - id: check-json
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: https://github.com/myint/docformatter
+    rev: v1.3.1
+    hooks:
+      - id: docformatter
+        args: [--in-place]
+
+  - repo: https://github.com/fsouza/autoflake8
+    rev: v0.3.1
+    hooks:
+      - id: autoflake8
+        args: [--in-place]
+
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: 'v2.0.4'  # Use the sha / tag you want to point at
+    hooks:
+    - id: autopep8
+      language_version: python3
+      args: [--in-place]
+
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        description: Format C++ related files with clang-format.
+        entry: clang-format
+        language: system
+        files: \.(c|cc|cxx|cpp|h|hpp|hxx|cu)$
+        args: ['--style=file', '--fallback-style=google','-i']

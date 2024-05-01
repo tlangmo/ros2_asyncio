@@ -1,0 +1,48 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	"name": "ros2_asyncio",
+	"dockerFile": "Dockerfile",
+	// Mount host workspace to this container path
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace/ros2_asyncio,type=bind",
+	"workspaceFolder": "/workspace/ros2_asyncio",
+	"build": {
+	  "args": {
+		"WORKSPACE": "/workspace/ros2_asyncio",
+		"VARIANT": "bullseye",
+		"BUILDKIT_INLINE_CACHE": "0"
+	  }
+	},
+	// This will launch the container as a non-root user.
+	"remoteUser": "ros",
+	"runArgs": [
+	  "--name=ros2_asyncio_devcontainer"
+	],
+	"containerEnv": {
+	  "ROS_HOSTNAME": "${localEnv:ROS_HOSTNAME}", 
+	  "ROS_DOMAIN_ID": "111",
+	  "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp"
+	},
+	"postCreateCommand": "pip3 install -e /workspace/ros2_asyncio/",
+	// See https://code.visualstudio.com/remote/advancedcontainers/start-processes
+	// Set *default* container specific settings.json values on container create.
+	"customizations": {
+	  "vscode": {
+		"settings": {
+		  "terminal.integrated.profiles.linux": {
+			"bash": {
+			  "path": "bash"
+			}
+		  },
+		  "terminal.integrated.defaultProfile.linux": "bash"
+		},
+		"extensions": [
+		  "bierner.markdown-mermaid",
+		  "ms-azuretools.vscode-docker",
+		  "ms-python.python",
+		  "redhat.vscode-yaml",
+		  "ms-iot.vscode-ros"
+	  ]
+	  }
+	}
+  }
+  
