@@ -41,6 +41,7 @@ RuntimeError: no running event loop
 ```
 
 ## How to use `ros2_asyncio`?
+`ros2_asyncio` has very similar API to `asyncio` but it is ROS 2 aware.
 
 ```python
 import ros2_asyncio
