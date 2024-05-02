@@ -39,7 +39,10 @@ Hence, when trying it use `asyncio` with ROS 2 you typically run into problems l
     loop = events.get_running_loop()
 RuntimeError: no running event loop
 ```
-
+## Installation
+```bash
+pip3 install git+https://github.com/tlangmo/ros2_asyncio.git
+```
 ## How to use `ros2_asyncio`?
 `ros2_asyncio` has very similar API to `asyncio` but it is ROS 2 aware.
 

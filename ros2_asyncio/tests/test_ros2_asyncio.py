@@ -126,3 +126,128 @@ def test_wait_for_accepts_coro(simple_node):
         assert was_called
     f = executor.create_task(_do())
     executor.spin_until_future_complete(f)
+
+
+def test_gather(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    num_calls = 0
+
+    async def long_work(timeout_sec):
+        nonlocal num_calls
+        await ros2_asyncio.sleep(simple_node, timeout_sec)
+        num_calls += 1
+
+    async def _do():
+        await ros2_asyncio.gather(simple_node, long_work(0.1), long_work(0.2))
+    f = executor.create_task(_do())
+    executor.spin_until_future_complete(f)
+    assert num_calls == 2
+
+
+def test_gather_raises_exception(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    num_calls = 0
+
+    async def work_with_exception():
+        await ros2_asyncio.sleep(simple_node, 0)
+        raise RuntimeError("This is an error")
+
+    async def work_with_result():
+        await ros2_asyncio.sleep(simple_node, 0)
+        return 42
+
+    async def _do():
+        with pytest.raises(RuntimeError):
+            await ros2_asyncio.gather(simple_node, work_with_exception(), work_with_result(), return_exceptions=False)
+
+    f = executor.create_task(_do())
+    executor.spin_until_future_complete(f)
+
+
+def test_gather_returns_exception(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    async def work_with_exception():
+        await ros2_asyncio.sleep(simple_node, 0)
+        raise RuntimeError("This is an error")
+
+    async def work_with_result():
+        await ros2_asyncio.sleep(simple_node, 0)
+        return 42
+
+    async def _do():
+        results = await ros2_asyncio.gather(simple_node, work_with_exception(), work_with_result(), return_exceptions=True)
+        assert len(results) == 2
+        assert isinstance(results[0], RuntimeError)
+        assert results[1] == 42
+
+    f = executor.create_task(_do())
+    executor.spin_until_future_complete(f)
+
+
+def test_gather_handles_duplicate_tasks(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    async def work_with_result():
+        await ros2_asyncio.sleep(simple_node, 0)
+        return 42
+
+    async def _do():
+        coro = work_with_result()
+        results = await ros2_asyncio.gather(simple_node, coro, coro)
+        assert len(results) == 2
+
+    f = executor.create_task(_do())
+    executor.spin_until_future_complete(f)
+
+
+def test_gather_accepts_Future(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    num_calls = 0
+
+    async def long_work(timeout_sec):
+        nonlocal num_calls
+        await ros2_asyncio.sleep(simple_node, timeout_sec)
+        num_calls += 1
+
+    async def _do_ok():
+        fut = executor.create_task(long_work(1))
+        assert isinstance(fut, Future)
+        await ros2_asyncio.gather(simple_node, fut)
+    f = executor.create_task(_do_ok())
+    executor.spin_until_future_complete(f)
+    assert num_calls == 1
+
+
+def test_gather_raise_ValueError_on_return_exceptions_and_Futures(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    num_calls = 0
+
+    async def long_work(timeout_sec):
+        nonlocal num_calls
+        await ros2_asyncio.sleep(simple_node, timeout_sec)
+        num_calls += 1
+
+    async def _do_invalid():
+        fut = executor.create_task(long_work(1))
+        assert isinstance(fut, Future)
+        with pytest.raises(ValueError):
+            await ros2_asyncio.gather(simple_node, fut, return_exceptions=True)
+    f = executor.create_task(_do_invalid())
+    executor.spin_until_future_complete(f)
