@@ -27,9 +27,9 @@ class LuckyNumberNode(Node):
         self.get_logger().info("Created ROS2 services...")
 
     async def run_trigger_callback(self, request, response):
-        self.get_logger().info(f'Received service request')
+        self.get_logger().info(f'Received lucky number request. Waiting now for 5 seconds...')
         now = perf_counter()
-        await ros2_asyncio.sleep(self, 2)
+        await ros2_asyncio.sleep(self, 5)
         response.success = True
         response.message = f'Processed callback in {perf_counter()-now:.2f} seconds. And here is your lucky number: {random.randint(1, 100)}'
         return response
@@ -43,15 +43,18 @@ def call_service(client_node):
     executor.add_node(lucky_node)
 
     async def call_service():
-        await ros2_asyncio.sleep(client_node, 2)
         client = client_node.create_client(
             Trigger, "service_node/lucky_number")
         request = Trigger.Request()
-        result = await client.call_async(request)
-        client_node.get_logger().info(
-            f'Result of service call: {result.message}')
-    f = ros2_asyncio.gather(
-        lucky_node, *[executor.create_task(call_service()) for _ in range(10)])
+        try:
+            now = perf_counter()
+            client_node.get_logger().info(f'Requesting my lucky number...')
+            result = await ros2_asyncio.wait_for(client_node, client.call_async(request), timeout_sec=2)
+        except TimeoutError:
+            client_node.get_logger().info(
+                f'Service call timed out. Waited for {perf_counter()-now:.2f} seconds.')
+
+    f = executor.create_task(call_service())
     executor.spin_until_future_complete(f)
 
 
