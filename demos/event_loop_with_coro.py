@@ -41,6 +41,7 @@ class Task:
             # When we call send on a coroutine,
             # it resumes its execution from where it last left off
             # (at the last yield).
+            # compare with https://github.com/ros2/rclpy/blob/070132a6bb73a006f0cdecf362626a1098b92c05/rclpy/rclpy/task.py#L220
             self.coro.send(None)
         except StopIteration:
             # The coroutine is done

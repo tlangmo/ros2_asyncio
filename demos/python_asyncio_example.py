@@ -1,7 +1,6 @@
 import asyncio
 import time
 """ Demonstration of Python's own asyncio library.
-
 """
 
 
@@ -22,9 +21,6 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
 try:
-    # create the tasks an run them
-    # loop.create_task(my_coroutine_fast())
-    # f = loop.create_task(my_coroutine_slow())
     loop.run_until_complete(asyncio.gather(
         my_coroutine_fast(), my_coroutine_slow()))
 finally:

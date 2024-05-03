@@ -4,6 +4,7 @@ import functools
 
 
 def demos(func):
+    """Decorator to setup and teardown rclpy for demos."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # Setup code: initialize context and node
