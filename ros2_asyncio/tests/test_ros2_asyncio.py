@@ -4,7 +4,7 @@ import pytest
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.task import Future
-import ros2_asyncio
+from ros2_asyncio import ros2_asyncio
 
 
 @pytest.fixture()
@@ -188,6 +188,41 @@ def test_gather_returns_exception(simple_node):
         assert len(results) == 2
         assert isinstance(results[0], RuntimeError)
         assert results[1] == 42
+
+    f = executor.create_task(_do())
+    executor.spin_until_future_complete(f)
+
+
+def test_gather_coro_immediately_done(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    async def work_immediate_done():
+        return 1
+
+    async def work_with_delay():
+        await ros2_asyncio.sleep(simple_node, 1)
+        return 42
+
+    async def _do():
+        results = await ros2_asyncio.gather(simple_node, work_immediate_done(), work_with_delay(), return_exceptions=False)
+        assert len(results) == 2
+        assert results == [1, 42]
+
+    f = executor.create_task(_do())
+    executor.spin_until_future_complete(f)
+
+
+def test_gather_empty_returns_empty_list(simple_node):
+    assert simple_node.handle is not None
+    executor = SingleThreadedExecutor(context=simple_node.context)
+    executor.add_node(simple_node)
+
+    async def _do():
+        results = await ros2_asyncio.gather(simple_node, return_exceptions=False)
+        assert isinstance(results, list)
+        assert len(results) == 0
 
     f = executor.create_task(_do())
     executor.spin_until_future_complete(f)

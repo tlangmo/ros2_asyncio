@@ -82,8 +82,17 @@ async def wait_for(node: Node, coro_or_future: Union[Future, Awaitable], timeout
 
 
 def gather(node: Node,  *coros_or_futures, return_exceptions=False):
-    """Return a future aggregating results from the given
-    coroutines/futures."""
+    """Return a future aggregating results from the given coroutines/futures.
+
+    Based on Python's asyncio/tasks.py
+    """
+
+    # check for empty input and behave similar to asyncio.gather
+    if not coros_or_futures:
+        outer = Future(executor=node.executor)
+        outer.set_result([])
+        return outer
+
     def _done_callback(fut):
         nonlocal nfinished
         nfinished += 1
@@ -103,6 +112,7 @@ def gather(node: Node,  *coros_or_futures, return_exceptions=False):
     nfuts = 0
     nfinished = 0
     outer = None
+
     for arg in coros_or_futures:
         if arg not in arg_to_fut:
             # Wrap the coroutine to intercept exceptions.

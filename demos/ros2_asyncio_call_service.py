@@ -53,6 +53,7 @@ def call_service(client_node):
 
     f = ros2_asyncio.gather(
         lucky_node, *[executor.create_task(call_service()) for _ in range(10)])
+
     executor.spin_until_future_complete(f)
 
 
